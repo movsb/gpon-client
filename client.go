@@ -91,6 +91,7 @@ func (c *GponClient) mustPostForm(u string, data map[string]interface{}) *http.R
 	for key, value := range data {
 		values.Set(key, fmt.Sprint(value))
 	}
+	values.Set("token", c.token)
 	req, err := http.NewRequest(http.MethodPost, u, strings.NewReader(values.Encode()))
 	if err != nil {
 		log.Fatalf("cannot post url: %s: %v\n", u, err)
@@ -157,7 +158,6 @@ func (c *GponClient) ListPortMappings() []*PortMappingRule {
 func (c *GponClient) CreatePortMapping(name string, innerIP string, protocol string, outerPort int, innerPort int) {
 	var ret RetVal
 	c.mustPostFormGetJSON(&ret, c.settingURL("pmSetSingle"), map[string]interface{}{
-		"token":    c.token,
 		"op":       "add",
 		"srvname":  name,
 		"client":   innerIP,
@@ -167,5 +167,20 @@ func (c *GponClient) CreatePortMapping(name string, innerIP string, protocol str
 	})
 	if ret.RetVal != 0 {
 		log.Fatalf("cannot create port mapping: %v\n", ret.RetVal)
+	}
+}
+
+func (c *GponClient) EnablePortMapping(name string, enable bool) {
+	var ret RetVal
+	op := "enable"
+	if !enable {
+		op = "disable"
+	}
+	c.mustPostFormGetJSON(&ret, c.settingURL("pmSetSingle"), map[string]interface{}{
+		"op":      op,
+		"srvname": name,
+	})
+	if ret.RetVal != 0 {
+		log.Fatalf("cannot enable/disable port mapping: %v\n", ret.RetVal)
 	}
 }

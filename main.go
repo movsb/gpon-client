@@ -13,4 +13,6 @@ func main() {
 		fmt.Printf("%d: %v\n", i+1, p)
 	}
 	client.CreatePortMapping("testxx", "192.168.1.6", "BOTH", 98, 100)
+	client.EnablePortMapping("testxx", true)
+	client.EnablePortMapping("testxx", false)
 }
