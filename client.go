@@ -55,12 +55,12 @@ func MustDial(ip string, username string, password string) *GponClient {
 	defer resp.Body.Close()
 	source, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("cannot get token", err)
+		log.Fatalf("cannot get token: %v", err)
 	}
 	reToken := regexp.MustCompile(`token: '([^']+)'`)
 	matches := reToken.FindStringSubmatch(string(source))
 	if len(matches) != 2 {
-		log.Fatalf("cannot get token", err)
+		log.Fatalf("cannot get token: %v", err)
 	}
 	client.token = matches[1]
 	return client
@@ -182,5 +182,16 @@ func (c *GponClient) EnablePortMapping(name string, enable bool) {
 	})
 	if ret.RetVal != 0 {
 		log.Fatalf("cannot enable/disable port mapping: %v\n", ret.RetVal)
+	}
+}
+
+func (c *GponClient) DeletePortMapping(name string) {
+	var ret RetVal
+	c.mustPostFormGetJSON(&ret, c.settingURL("pmSetSingle"), map[string]interface{}{
+		"op":      "del",
+		"srvname": name,
+	})
+	if ret.RetVal != 0 {
+		log.Fatalf("cannot delete port mapping: %v\n", ret.RetVal)
 	}
 }
