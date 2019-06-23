@@ -3,16 +3,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
 type GponClient struct {
-	ip string
-	// The sysauth login cookie
+	ip     string
 	cookie *http.Cookie
+	token  string
 }
 
 // MustDial tries to log in and then returns a GponClient
@@ -44,25 +46,63 @@ func MustDial(ip string, username string, password string) *GponClient {
 		log.Fatal("login failed.")
 	}
 
-	return &GponClient{
+	client := &GponClient{
 		ip:     ip,
 		cookie: sysauthCookie,
 	}
+
+	resp = client.mustGet(client.settingURL("status"))
+	defer resp.Body.Close()
+	source, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("cannot get token", err)
+	}
+	reToken := regexp.MustCompile(`token: '([^']+)'`)
+	matches := reToken.FindStringSubmatch(string(source))
+	if len(matches) != 2 {
+		log.Fatalf("cannot get token", err)
+	}
+	client.token = matches[1]
+	return client
 }
 
 func (c *GponClient) settingURL(name string) string {
 	return fmt.Sprintf("http://%s/cgi-bin/luci/admin/settings/%s", c.ip, name)
 }
 
-func (c *GponClient) mustGet(url string) *http.Response {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (c *GponClient) mustGet(u string) *http.Response {
+	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
-		log.Fatalf("cannot get url: %s: %v\n", url, err)
+		log.Fatalf("cannot get url: %s: %v\n", u, err)
 	}
 	req.AddCookie(c.cookie)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatalf("cannot get url: %s: %v\n", url, err)
+		log.Fatalf("cannot get url: %s: %v\n", u, err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatalf("cannot get url: http status != 200: %v\n", resp.Status)
+	}
+	return resp
+}
+
+func (c *GponClient) mustPostForm(u string, data map[string]interface{}) *http.Response {
+	values := url.Values{}
+	for key, value := range data {
+		values.Set(key, fmt.Sprint(value))
+	}
+	req, err := http.NewRequest(http.MethodPost, u, strings.NewReader(values.Encode()))
+	if err != nil {
+		log.Fatalf("cannot post url: %s: %v\n", u, err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(c.cookie)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalf("cannot post url: %s: %v\n", u, err)
+	}
+	if resp.StatusCode != 200 {
+		log.Fatalf("cannot post url: http status != 200: %v\n", resp.Status)
 	}
 	return resp
 }
@@ -70,9 +110,22 @@ func (c *GponClient) mustGet(url string) *http.Response {
 func (c *GponClient) mustGetJSON(out interface{}, url string) {
 	resp := c.mustGet(url)
 	defer resp.Body.Close()
-	decoder := json.NewDecoder(resp.Body)
-	if err := decoder.Decode(out); err != nil {
-		log.Fatalf("cannot unmarshal json: %v\n", err)
+	if out != nil {
+		decoder := json.NewDecoder(resp.Body)
+		if err := decoder.Decode(out); err != nil {
+			log.Fatalf("cannot unmarshal json: %v\n", err)
+		}
+	}
+}
+
+func (c *GponClient) mustPostFormGetJSON(out interface{}, url string, data map[string]interface{}) {
+	resp := c.mustPostForm(url, data)
+	defer resp.Body.Close()
+	if out != nil {
+		decoder := json.NewDecoder(resp.Body)
+		if err := decoder.Decode(out); err != nil {
+			log.Fatalf("cannot unmarshal json: %v\n", err)
+		}
 	}
 }
 
@@ -96,4 +149,23 @@ func (c *GponClient) ListPortMappings() []*PortMappingRule {
 		outRules = append(outRules, &rule)
 	}
 	return outRules
+}
+
+// CreatePortMapping creates a port mapping.
+//
+// protocol: TCP, UDP, BOTH
+func (c *GponClient) CreatePortMapping(name string, innerIP string, protocol string, outerPort int, innerPort int) {
+	var ret RetVal
+	c.mustPostFormGetJSON(&ret, c.settingURL("pmSetSingle"), map[string]interface{}{
+		"token":    c.token,
+		"op":       "add",
+		"srvname":  name,
+		"client":   innerIP,
+		"protocol": protocol,
+		"exPort":   outerPort,
+		"inPort":   innerPort,
+	})
+	if ret.RetVal != 0 {
+		log.Fatalf("cannot create port mapping: %v\n", ret.RetVal)
+	}
 }

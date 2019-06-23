@@ -12,4 +12,5 @@ func main() {
 	for i, p := range portMappings {
 		fmt.Printf("%d: %v\n", i+1, p)
 	}
+	client.CreatePortMapping("testxx", "192.168.1.6", "BOTH", 98, 100)
 }
