@@ -155,7 +155,7 @@ func (c *GponClient) ListPortMappings() []*PortMappingRule {
 // CreatePortMapping creates a port mapping.
 //
 // protocol: TCP, UDP, BOTH
-func (c *GponClient) CreatePortMapping(name string, innerIP string, protocol string, outerPort int, innerPort int) {
+func (c *GponClient) CreatePortMapping(name string, protocol string, outerPort int, innerIP string, innerPort int) {
 	var ret RetVal
 	c.mustPostFormGetJSON(&ret, c.settingURL("pmSetSingle"), map[string]interface{}{
 		"op":       "add",

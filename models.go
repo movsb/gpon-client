@@ -5,10 +5,10 @@ type RetVal struct {
 }
 
 type PortMappingRule struct {
-	Enable      int    `json:"enable"`
-	Protocol    string `json:"protocol"`
-	InnerPort   int    `json:"inPort"`
-	OuterPort   int    `json:"exPort"`
-	Description string `json:"desp"`
-	InnerIP     string `json:"client"`
+	Name      string `json:"desp"`
+	Protocol  string `json:"protocol"`
+	OuterPort int    `json:"exPort"`
+	InnerIP   string `json:"client"`
+	InnerPort int    `json:"inPort"`
+	Enable    int    `json:"enable"`
 }
