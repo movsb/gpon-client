@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"text/template"
 )
 
 func main() {
@@ -52,6 +53,9 @@ func main() {
 			name := a[0]
 			client.EnablePortMapping(name, false)
 		}
+	case `gwinfo`:
+		info := client.GetGatewayInfo()
+		gwinfoTemplate.Execute(os.Stdout, info)
 	}
 }
 
@@ -68,6 +72,13 @@ All Available Command List:
 	portmaps enable  <name>
 	portmaps disable <name>
 
+	gwinfo
+
 `
 	fmt.Fprintf(os.Stderr, usageText, name)
 }
+
+var gwinfoTemplate = template.Must(template.New(`gwinfoTemplate`).Parse(`LAN IPv4: {{ .LANIPv4 }}
+WAN IPv4: {{ .WANIPv4 }}
+MAC     : {{ .MAC }}
+`))

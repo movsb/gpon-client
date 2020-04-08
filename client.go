@@ -195,3 +195,10 @@ func (c *GponClient) DeletePortMapping(name string) {
 		log.Fatalf("cannot delete port mapping: %v\n", ret.RetVal)
 	}
 }
+
+// GetGatewayInfo ...
+func (c *GponClient) GetGatewayInfo() GatewayInfo {
+	var gw _GatewayInfo
+	c.mustGetJSON(&gw, c.settingURL(`gwinfo?get=part`))
+	return gw.ToGatewayInfo()
+}

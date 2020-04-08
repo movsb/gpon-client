@@ -18,6 +18,8 @@ All Available Command List:
         portmaps enable  <name>
         portmaps disable <name>
 
+        gwinfo
+
 ```
 
 ## 运行环境初始化配置
@@ -76,6 +78,15 @@ $ ./gpon-client portmaps enable nginx
 $ ./gpon-client portmaps disable nginx
 ```
 
+### 查看网关信息
+
+```bash
+$ ./gpon-client gwinfo
+LAN IPv4: 192.168.1.1
+WAN IPv4: 113.116.181.157
+MAC     : 6C38456BA318
+```
+
 ## 版权
 
-Copyright (C) 2019 movsb
+Copyright (C) 2019-2020 movsb
