@@ -101,4 +101,30 @@ func init() {
 		},
 	}
 	portMapsCmd.AddCommand(portMapsDisableCmd)
+	devicesCmd := &cobra.Command{
+		Use:   `devices`,
+		Short: `manage devices`,
+	}
+	rootCmd.AddCommand(devicesCmd)
+	devicesListCmd := &cobra.Command{
+		Use:   `list`,
+		Short: `list devices`,
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			devices := Client.ListDevices()
+			if len(devices) == 0 {
+				return
+			}
+			fmtstr := "%-10v%-7v%-14v%15v%18v    %-10v%-10v%-14v\n"
+			fmt.Printf(fmtstr, `Name`, `Wired`, `IPv4`, `Upload Speed`, `Download Speed`, `Type`, `System`, `MAC`)
+			fmt.Println("----------------------------------------------------------------------------------------------------")
+			for _, d := range devices {
+				fmt.Printf(fmtstr, d.Name, d.Wired, d.IP,
+					friendlySpeed(d.UploadSpeed), friendlySpeed(d.DownloadSpeed),
+					d.Type, d.System, d.MAC,
+				)
+			}
+		},
+	}
+	devicesCmd.AddCommand(devicesListCmd)
 }

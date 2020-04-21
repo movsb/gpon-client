@@ -71,6 +71,10 @@ func (c *GponClient) settingURL(name string) string {
 	return fmt.Sprintf("http://%s/cgi-bin/luci/admin/settings/%s", c.ip, name)
 }
 
+func (c *GponClient) deviceURL(name string) string {
+	return fmt.Sprintf("http://%s/cgi-bin/luci/admin/device/%s", c.ip, name)
+}
+
 func (c *GponClient) mustGet(u string) *http.Response {
 	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
@@ -204,4 +208,38 @@ func (c *GponClient) GetGatewayInfo() GatewayInfo {
 	var gw _GatewayInfo
 	c.mustGetJSON(&gw, c.settingURL(`gwinfo?get=part`))
 	return gw.ToGatewayInfo()
+}
+
+// ListDevices ...
+func (c *GponClient) ListDevices() (devices []*Device) {
+	var wired, wireless map[string]*Device
+	c.mustGetJSON(&wired, c.deviceURL(`devInfo?type=0`))
+	c.mustGetJSON(&wireless, c.deviceURL(`devInfo?type=1`))
+	delete(wired, `curip`)
+	delete(wired, `count`)
+	delete(wireless, `curip`)
+	delete(wireless, `count`)
+	for name, dev := range wired {
+		dev.Name = name
+		dev.Wired = true
+		if dev.Type == `` {
+			dev.Type = `-`
+		}
+		if dev.System == `` {
+			dev.System = `-`
+		}
+		devices = append(devices, dev)
+	}
+	for name, dev := range wireless {
+		dev.Name = name
+		dev.Wired = false
+		if dev.Type == `` {
+			dev.Type = `-`
+		}
+		if dev.System == `` {
+			dev.System = `-`
+		}
+		devices = append(devices, dev)
+	}
+	return
 }

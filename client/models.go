@@ -1,6 +1,9 @@
 package client
 
-import "net"
+import (
+	"encoding/json"
+	"net"
+)
 
 // RetVal ...
 type RetVal struct {
@@ -38,4 +41,26 @@ func (gw _GatewayInfo) ToGatewayInfo() GatewayInfo {
 		WANIPv4: net.ParseIP(gw.WANIPv4),
 	}
 	return info
+}
+
+// Device ...
+type Device struct {
+	Name          string
+	Wired         bool
+	MAC           string `json:"mac"`
+	IPv6          string `json:"ipv6"`
+	Restrict      bool   `json:"restrict"`
+	UploadSpeed   int    `json:"upSpeed" yaml:"upload_speed"`
+	DownloadSpeed int    `json:"downSpeed" yaml:"download_speed"`
+	IP            string `json:"ip"`
+	Blacklisted   bool   `json:"black" yaml:"black_listed"`
+	Type          string `json:"type"`
+	System        string `json:"system"`
+}
+
+// UnmarshalJSON ...
+func (d *Device) UnmarshalJSON(data []byte) error {
+	type _D Device
+	json.Unmarshal(data, (*_D)(d))
+	return nil
 }

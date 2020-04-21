@@ -6,20 +6,22 @@
 
 ```bash
 $ ./gpon-client
-A GPON (Tiānyì Gateway) client used to modify router configurations.
+./gpon-client 
+A GPON (Tiānyì Gateway) client used to modify router configurations
 
-Usage: ./gpon-client command [sub-command] [<arguments>...]
+Usage:
+  ./gpon-client [command]
 
-All Available Command List:
+Available Commands:
+  devices     manage devices
+  gwinfo      show gateway information
+  help        Help about any command
+  portmaps    manage port mappings
 
-        portmaps list
-        portmaps create  <name> <protocol> <outer-port> <inner-ip> <inner-port>
-        portmaps delete  <name>
-        portmaps enable  <name>
-        portmaps disable <name>
+Flags:
+  -h, --help   help for ./gpon-client
 
-        gwinfo
-
+Use "./gpon-client [command] --help" for more information about a command.
 ```
 
 ## 运行环境初始化配置
@@ -38,6 +40,16 @@ $ export PASSWORD=
 ```
 
 ## 示例使用
+
+### 设备列表
+
+```bash
+$ ./gpon-client devices list
+Name      Wired  IPv4             Upload Speed    Download Speed    Type      System    MAC           
+----------------------------------------------------------------------------------------------------
+dev1      true   192.168.1.3        415.22KB/s         26.96KB/s    -         -         DCA63266E6AD  
+dev1      false  192.168.1.2              0B/s              0B/s    phone     ios       F838808FDD44
+```
 
 ### 端口转发配置
 
