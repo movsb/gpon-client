@@ -1,7 +1,8 @@
-package main
+package client
 
 import "net"
 
+// RetVal ...
 type RetVal struct {
 	RetVal int `json:"retVal"`
 }

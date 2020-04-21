@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"encoding/json"
@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// GponClient ...
 type GponClient struct {
 	ip     string
 	cookie *http.Cookie
@@ -170,6 +171,7 @@ func (c *GponClient) CreatePortMapping(name string, protocol string, outerPort i
 	}
 }
 
+// EnablePortMapping ...
 func (c *GponClient) EnablePortMapping(name string, enable bool) {
 	var ret RetVal
 	op := "enable"
@@ -185,6 +187,7 @@ func (c *GponClient) EnablePortMapping(name string, enable bool) {
 	}
 }
 
+// DeletePortMapping ...
 func (c *GponClient) DeletePortMapping(name string) {
 	var ret RetVal
 	c.mustPostFormGetJSON(&ret, c.settingURL("pmSetSingle"), map[string]interface{}{
